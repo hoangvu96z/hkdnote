@@ -6,13 +6,13 @@ class Calculations {
   static double totalIncome(List<Transaction> transactions) {
     return transactions
         .where((transaction) => transaction.type == TransactionType.income)
-        .fold(0, (sum, item) => sum + item.amount);
+        .fold(0.0, (sum, item) => sum + item.amount);
   }
 
   static double totalExpense(List<Transaction> transactions) {
     return transactions
         .where((transaction) => transaction.type == TransactionType.expense)
-        .fold(0, (sum, item) => sum + item.amount);
+        .fold(0.0, (sum, item) => sum + item.amount);
   }
 
   static double profit(List<Transaction> transactions) {
@@ -22,10 +22,10 @@ class Calculations {
   static double estimatedTax(List<Transaction> transactions) {
     final outputTaxBase = transactions
         .where((transaction) => transaction.taxType == TaxType.output)
-        .fold(0, (sum, item) => sum + item.amount);
+        .fold(0.0, (sum, item) => sum + item.amount);
     final inputTaxBase = transactions
         .where((transaction) => transaction.taxType == TaxType.input)
-        .fold(0, (sum, item) => sum + item.amount);
+        .fold(0.0, (sum, item) => sum + item.amount);
     return (outputTaxBase * 0.015) - (inputTaxBase * 0.01);
   }
 
@@ -34,7 +34,7 @@ class Calculations {
   }
 
   static double inventoryValue(List<InventoryItem> items) {
-    return items.fold(0, (sum, item) => sum + item.stockValue);
+    return items.fold(0.0, (sum, item) => sum + item.stockValue);
   }
 
   static int lowStockCount(List<InventoryItem> items) {
@@ -42,7 +42,7 @@ class Calculations {
   }
 
   static double totalPayroll(List<PayrollRecord> records) {
-    return records.fold(0, (sum, record) => sum + record.payout);
+    return records.fold(0.0, (sum, record) => sum + record.payout);
   }
 
   static int unpaidCount(List<PayrollRecord> records) {
