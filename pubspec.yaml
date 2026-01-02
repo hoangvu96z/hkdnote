@@ -1,0 +1,15 @@
+name: hkdnote
+version: 0.1.0
+publish_to: "none"
+description: Ung dung ghi chu thu chi cho ho kinh doanh.
+
+environment:
+  sdk: ">=2.19.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+flutter:
+  uses-material-design: true
