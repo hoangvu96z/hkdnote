@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../models/transaction.dart';
+import '../services/calculations.dart';
+import '../services/formatters.dart';
+import '../services/sample_data.dart';
+
 class LedgerScreen extends StatelessWidget {
   const LedgerScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final transactions = SampleData.transactions();
     return SafeArea(
       child: DefaultTabController(
         length: 3,
@@ -36,7 +42,7 @@ class LedgerScreen extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  _QuickEntryTab(),
+                  _QuickEntryTab(transactions: transactions),
                   _SalesEntryTab(),
                   _OcrEntryTab(),
                 ],
@@ -50,8 +56,13 @@ class LedgerScreen extends StatelessWidget {
 }
 
 class _QuickEntryTab extends StatelessWidget {
+  const _QuickEntryTab({required this.transactions});
+
+  final List<Transaction> transactions;
+
   @override
   Widget build(BuildContext context) {
+    final missingDocs = Calculations.missingDocumentCount(transactions);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -65,11 +76,21 @@ class _QuickEntryTab extends StatelessWidget {
         const _TextField(label: 'Ghi chú'),
         const SizedBox(height: 8),
         const _AiHint(text: 'Gợi ý danh mục: Nhập hàng hóa – Kho chính'),
+        if (missingDocs > 0) ...[
+          const SizedBox(height: 12),
+          _WarningHint(
+            text: 'Có $missingDocs chứng từ thiếu số chứng từ theo TT88.',
+          ),
+        ],
         const SizedBox(height: 16),
         FilledButton(
           onPressed: () {},
           child: const Text('Lưu giao dịch'),
         ),
+        const SizedBox(height: 20),
+        Text('Giao dịch gần đây', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        ...transactions.map(_RecentTransactionTile.fromTransaction),
       ],
     );
   }
@@ -236,6 +257,30 @@ class _AiHint extends StatelessWidget {
   }
 }
 
+class _WarningHint extends StatelessWidget {
+  const _WarningHint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_outlined, color: Theme.of(context).colorScheme.error),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+}
+
 class _CustomerCard extends StatelessWidget {
   const _CustomerCard();
 
@@ -342,6 +387,50 @@ class _TotalRow extends StatelessWidget {
           Text(label),
           Text(value, style: Theme.of(context).textTheme.titleSmall),
         ],
+      ),
+    );
+  }
+}
+
+class _RecentTransactionTile extends StatelessWidget {
+  const _RecentTransactionTile({
+    required this.title,
+    required this.subtitle,
+    required this.amount,
+    required this.isIncome,
+  });
+
+  final String title;
+  final String subtitle;
+  final String amount;
+  final bool isIncome;
+
+  factory _RecentTransactionTile.fromTransaction(Transaction transaction) {
+    return _RecentTransactionTile(
+      title: transaction.category,
+      subtitle: transaction.note,
+      amount: formatCurrency(transaction.amount),
+      isIncome: transaction.type == TransactionType.income,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(
+          isIncome ? Icons.call_received : Icons.call_made,
+          color: isIncome ? Colors.green : Colors.red,
+        ),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: Text(
+          amount,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: isIncome ? Colors.green : Colors.red,
+              ),
+        ),
       ),
     );
   }

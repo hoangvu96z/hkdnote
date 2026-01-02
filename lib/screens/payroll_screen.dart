@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../models/payroll_record.dart';
+import '../services/calculations.dart';
+import '../services/formatters.dart';
+import '../services/sample_data.dart';
+
 class PayrollScreen extends StatelessWidget {
   const PayrollScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final records = SampleData.payrollRecords();
+    final totalPayroll = Calculations.totalPayroll(records);
+    final unpaidCount = Calculations.unpaidCount(records);
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -20,7 +29,11 @@ class PayrollScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const _PayrollSummaryCard(),
+          _PayrollSummaryCard(
+            totalPayroll: formatCurrency(totalPayroll),
+            unpaidCount: unpaidCount,
+            totalEmployees: records.length,
+          ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () {},
@@ -36,20 +49,7 @@ class PayrollScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text('Danh sách nhân viên', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          const _EmployeeRow(
-            name: 'Nguyễn Văn B',
-            baseSalary: '6.000.000 đ',
-            workdays: '22/26 công',
-            payout: '5.100.000 đ',
-            isPaid: true,
-          ),
-          const _EmployeeRow(
-            name: 'Trần Thị C',
-            baseSalary: '5.500.000 đ',
-            workdays: '20/26 công',
-            payout: '4.230.000 đ',
-            isPaid: false,
-          ),
+          ...records.map(_EmployeeRow.fromRecord),
         ],
       ),
     );
@@ -57,7 +57,15 @@ class PayrollScreen extends StatelessWidget {
 }
 
 class _PayrollSummaryCard extends StatelessWidget {
-  const _PayrollSummaryCard();
+  const _PayrollSummaryCard({
+    required this.totalPayroll,
+    required this.unpaidCount,
+    required this.totalEmployees,
+  });
+
+  final String totalPayroll;
+  final int unpaidCount;
+  final int totalEmployees;
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +80,15 @@ class _PayrollSummaryCard extends StatelessWidget {
         children: [
           Text('Tháng 12/2024', style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: 8),
-          Text('Quỹ lương: 12,8 triệu', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Quỹ lương: $totalPayroll',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
-          Text('2 nhân viên • 1 chưa trả', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            '$totalEmployees nhân viên • $unpaidCount chưa trả',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -95,6 +109,16 @@ class _EmployeeRow extends StatelessWidget {
   final String workdays;
   final String payout;
   final bool isPaid;
+
+  factory _EmployeeRow.fromRecord(PayrollRecord record) {
+    return _EmployeeRow(
+      name: record.employeeName,
+      baseSalary: formatCurrency(record.baseSalary),
+      workdays: '${record.workingDays}/${record.totalWorkingDays} công',
+      payout: formatCurrency(record.payout),
+      isPaid: record.isPaid,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

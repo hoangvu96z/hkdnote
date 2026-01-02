@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../models/inventory_item.dart';
+import '../services/calculations.dart';
+import '../services/formatters.dart';
+import '../services/sample_data.dart';
+
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final items = SampleData.inventoryItems();
+    final totalValue = Calculations.inventoryValue(items);
+    final lowStock = Calculations.lowStockCount(items);
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -20,7 +29,10 @@ class InventoryScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const _InventorySummaryCard(),
+          _InventorySummaryCard(
+            totalValue: formatCurrency(totalValue),
+            lowStockCount: lowStock,
+          ),
           const SizedBox(height: 12),
           const _InventoryActionsRow(),
           const SizedBox(height: 16),
@@ -32,27 +44,7 @@ class InventoryScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _InventoryItemCard(
-            name: 'Nước ngọt',
-            quantity: '18 thùng',
-            cost: '120.000 đ',
-            price: '150.000 đ',
-            isLowStock: false,
-          ),
-          _InventoryItemCard(
-            name: 'Bánh mì',
-            quantity: '3 thùng',
-            cost: '90.000 đ',
-            price: '120.000 đ',
-            isLowStock: true,
-          ),
-          _InventoryItemCard(
-            name: 'Sữa tươi',
-            quantity: '6 thùng',
-            cost: '180.000 đ',
-            price: '210.000 đ',
-            isLowStock: false,
-          ),
+          ...items.map(_InventoryItemCard.fromItem),
         ],
       ),
     );
@@ -60,7 +52,13 @@ class InventoryScreen extends StatelessWidget {
 }
 
 class _InventorySummaryCard extends StatelessWidget {
-  const _InventorySummaryCard();
+  const _InventorySummaryCard({
+    required this.totalValue,
+    required this.lowStockCount,
+  });
+
+  final String totalValue;
+  final int lowStockCount;
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +73,12 @@ class _InventorySummaryCard extends StatelessWidget {
         children: [
           Text('Tổng giá trị tồn kho', style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: 8),
-          Text('48,5 triệu', style: Theme.of(context).textTheme.headlineSmall),
+          Text(totalValue, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          Text('Có 2 mặt hàng gần hết', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Có $lowStockCount mặt hàng gần hết',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -133,6 +134,16 @@ class _InventoryItemCard extends StatelessWidget {
   final String cost;
   final String price;
   final bool isLowStock;
+
+  factory _InventoryItemCard.fromItem(InventoryItem item) {
+    return _InventoryItemCard(
+      name: item.name,
+      quantity: '${item.quantity.toInt()} thùng',
+      cost: formatCurrency(item.unitCost),
+      price: formatCurrency(item.unitPrice),
+      isLowStock: item.isLowStock,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

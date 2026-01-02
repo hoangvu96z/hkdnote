@@ -1,19 +1,37 @@
 import 'package:flutter/material.dart';
 
+import '../services/calculations.dart';
+import '../services/formatters.dart';
+import '../services/sample_data.dart';
+
 class OverviewScreen extends StatelessWidget {
   const OverviewScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final transactions = SampleData.transactions();
+    final totalIncome = Calculations.totalIncome(transactions);
+    final totalExpense = Calculations.totalExpense(transactions);
+    final profit = Calculations.profit(transactions);
+    final estimatedTax = Calculations.estimatedTax(transactions);
+    final missingDocs = Calculations.missingDocumentCount(transactions);
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _HeaderSection(onPeriodTap: () {}),
           const SizedBox(height: 16),
-          const _KpiRow(),
+          _KpiRow(
+            totalIncome: formatCurrency(totalIncome),
+            totalExpense: formatCurrency(totalExpense),
+            profit: formatCurrency(profit),
+          ),
           const SizedBox(height: 16),
-          const _KpiRowSecondary(),
+          _KpiRowSecondary(
+            estimatedTax: formatCurrency(estimatedTax),
+            missingDocs: missingDocs,
+          ),
           const SizedBox(height: 16),
           _ChartPlaceholder(),
           const SizedBox(height: 16),
@@ -87,16 +105,24 @@ class _HeaderSection extends StatelessWidget {
 }
 
 class _KpiRow extends StatelessWidget {
-  const _KpiRow();
+  const _KpiRow({
+    required this.totalIncome,
+    required this.totalExpense,
+    required this.profit,
+  });
+
+  final String totalIncome;
+  final String totalExpense;
+  final String profit;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
+      children: [
         Expanded(
           child: _KpiCard(
             title: 'Doanh thu',
-            value: '125,4 triệu',
+            value: totalIncome,
             icon: Icons.trending_up,
           ),
         ),
@@ -104,7 +130,7 @@ class _KpiRow extends StatelessWidget {
         Expanded(
           child: _KpiCard(
             title: 'Chi phí',
-            value: '74,2 triệu',
+            value: totalExpense,
             icon: Icons.trending_down,
           ),
         ),
@@ -112,7 +138,7 @@ class _KpiRow extends StatelessWidget {
         Expanded(
           child: _KpiCard(
             title: 'Lợi nhuận',
-            value: '51,2 triệu',
+            value: profit,
             icon: Icons.savings_outlined,
           ),
         ),
@@ -122,16 +148,22 @@ class _KpiRow extends StatelessWidget {
 }
 
 class _KpiRowSecondary extends StatelessWidget {
-  const _KpiRowSecondary();
+  const _KpiRowSecondary({
+    required this.estimatedTax,
+    required this.missingDocs,
+  });
+
+  final String estimatedTax;
+  final int missingDocs;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
+      children: [
         Expanded(
           child: _KpiCard(
             title: 'Thuế ước tính',
-            value: '6,5 triệu',
+            value: estimatedTax,
             icon: Icons.account_balance_wallet_outlined,
           ),
         ),
@@ -139,7 +171,7 @@ class _KpiRowSecondary extends StatelessWidget {
         Expanded(
           child: _KpiCard(
             title: 'Tình trạng sổ',
-            value: '3 ngày chưa ghi',
+            value: '$missingDocs chứng từ thiếu số',
             icon: Icons.event_busy_outlined,
           ),
         ),
