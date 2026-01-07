@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../state/app_state.dart';
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final appState = AppStateScope.of(context);
+    final profile = appState.profile;
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -22,6 +27,12 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'Theo tháng/quý',
             icon: Icons.event_available_outlined,
           ),
+          if (profile != null)
+            _SettingsTile(
+              title: 'Tên hộ',
+              subtitle: profile.businessName,
+              icon: Icons.badge_outlined,
+            ),
           const _SectionTitle(title: 'Tài khoản & ví'),
           const _SettingsTile(
             title: 'Ví tiền mặt',
@@ -59,6 +70,22 @@ class SettingsScreen extends StatelessWidget {
             title: 'Chất lượng OCR',
             subtitle: 'Chuẩn, Nâng cao',
             icon: Icons.document_scanner_outlined,
+          ),
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: SwitchListTile(
+              title: const Text('Dark mode'),
+              subtitle: const Text('Giao diện tối cho toàn bộ ứng dụng'),
+              value: appState.isDarkMode,
+              onChanged: appState.setDarkMode,
+              secondary: const Icon(Icons.dark_mode_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: appState.signOut,
+            icon: const Icon(Icons.logout),
+            label: const Text('Đăng xuất'),
           ),
         ],
       ),

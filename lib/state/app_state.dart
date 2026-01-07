@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../models/business_profile.dart';
 import '../models/inventory_item.dart';
 import '../models/payroll_record.dart';
 import '../models/transaction.dart';
@@ -10,17 +11,29 @@ class AppState extends ChangeNotifier {
     List<Transaction>? initialTransactions,
     List<InventoryItem>? initialInventory,
     List<PayrollRecord>? initialPayroll,
+    BusinessProfile? initialProfile,
+    bool initialLoggedIn = false,
+    bool initialDarkMode = true,
   })  : _transactions = initialTransactions ?? [],
         _inventory = initialInventory ?? [],
-        _payroll = initialPayroll ?? [];
+        _payroll = initialPayroll ?? [],
+        _profile = initialProfile,
+        _isLoggedIn = initialLoggedIn,
+        _isDarkMode = initialDarkMode;
 
   final List<Transaction> _transactions;
   final List<InventoryItem> _inventory;
   final List<PayrollRecord> _payroll;
+  BusinessProfile? _profile;
+  bool _isLoggedIn;
+  bool _isDarkMode;
 
   List<Transaction> get transactions => List.unmodifiable(_transactions);
   List<InventoryItem> get inventory => List.unmodifiable(_inventory);
   List<PayrollRecord> get payroll => List.unmodifiable(_payroll);
+  BusinessProfile? get profile => _profile;
+  bool get isLoggedIn => _isLoggedIn;
+  bool get isDarkMode => _isDarkMode;
 
   void addTransaction(Transaction transaction) {
     _transactions.insert(0, transaction);
@@ -61,6 +74,28 @@ class AppState extends ChangeNotifier {
       deduction: current.deduction,
       isPaid: isPaid,
     );
+    notifyListeners();
+  }
+
+  void completeOnboarding(BusinessProfile profile) {
+    _profile = profile;
+    _isLoggedIn = true;
+    notifyListeners();
+  }
+
+  void signIn() {
+    if (_profile == null) return;
+    _isLoggedIn = true;
+    notifyListeners();
+  }
+
+  void signOut() {
+    _isLoggedIn = false;
+    notifyListeners();
+  }
+
+  void setDarkMode(bool value) {
+    _isDarkMode = value;
     notifyListeners();
   }
 }

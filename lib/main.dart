@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
+import 'screens/login_screen.dart';
 import 'screens/overview_screen.dart';
 import 'screens/ledger_screen.dart';
 import 'screens/inventory_screen.dart';
 import 'screens/payroll_screen.dart';
+import 'screens/registration_screen.dart';
 import 'screens/settings_screen.dart';
-import 'services/sample_data.dart';
 import 'state/app_state.dart';
 import 'widgets/new_entry_fab.dart';
 
 void main() {
   final appState = AppState(
-    initialTransactions: SampleData.transactions(),
-    initialInventory: SampleData.inventoryItems(),
-    initialPayroll: SampleData.payrollRecords(),
+    initialTransactions: const [],
+    initialInventory: const [],
+    initialPayroll: const [],
   );
   runApp(HKDNoteApp(appState: appState));
 }
@@ -27,16 +28,100 @@ class HKDNoteApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppStateScope(
       notifier: appState,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'HKD Note',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1C6EF2)),
-          useMaterial3: true,
-        ),
-        home: HomeShell(appState: appState),
+      child: AnimatedBuilder(
+        animation: appState,
+        builder: (context, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'HKD Note',
+            themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            theme: _buildLightTheme(),
+            darkTheme: _buildDarkTheme(),
+            home: AuthGate(appState: appState),
+          );
+        },
       ),
     );
+  }
+}
+
+ThemeData _buildLightTheme() {
+  final scheme = ColorScheme.fromSeed(seedColor: const Color(0xFF1C6EF2));
+  return ThemeData(
+    colorScheme: scheme,
+    useMaterial3: true,
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  );
+}
+
+ThemeData _buildDarkTheme() {
+  const scheme = ColorScheme.dark(
+    primary: Color(0xFF1E6FFF),
+    surface: Color(0xFF0F141E),
+    onSurface: Colors.white,
+    surfaceVariant: Color(0xFF1B2130),
+    outlineVariant: Color(0xFF2B3446),
+  );
+  return ThemeData(
+    colorScheme: scheme,
+    useMaterial3: true,
+    scaffoldBackgroundColor: scheme.surface,
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: scheme.surfaceVariant,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF2B3446)),
+      ),
+    ),
+  );
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key, required this.appState});
+
+  final AppState appState;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        if (appState.isLoggedIn) {
+          return HomeShell(appState: appState);
+        }
+        return AuthFlow(appState: appState);
+      },
+    );
+  }
+}
+
+class AuthFlow extends StatefulWidget {
+  const AuthFlow({super.key, required this.appState});
+
+  final AppState appState;
+
+  @override
+  State<AuthFlow> createState() => _AuthFlowState();
+}
+
+class _AuthFlowState extends State<AuthFlow> {
+  late bool _showLogin = widget.appState.profile != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return _showLogin
+        ? LoginScreen(
+            onRegisterTap: () => setState(() => _showLogin = false),
+            onLogin: widget.appState.signIn,
+          )
+        : RegistrationScreen(
+            onLoginTap: () => setState(() => _showLogin = true),
+            showLoginAction: widget.appState.profile != null,
+          );
   }
 }
 
