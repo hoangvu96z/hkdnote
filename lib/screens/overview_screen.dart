@@ -2,71 +2,78 @@ import 'package:flutter/material.dart';
 
 import '../services/calculations.dart';
 import '../services/formatters.dart';
-import '../services/sample_data.dart';
+import '../state/app_state.dart';
 
 class OverviewScreen extends StatelessWidget {
-  const OverviewScreen({super.key});
+  const OverviewScreen({super.key, required this.appState});
+
+  final AppState appState;
 
   @override
   Widget build(BuildContext context) {
-    final transactions = SampleData.transactions();
-    final totalIncome = Calculations.totalIncome(transactions);
-    final totalExpense = Calculations.totalExpense(transactions);
-    final profit = Calculations.profit(transactions);
-    final estimatedTax = Calculations.estimatedTax(transactions);
-    final missingDocs = Calculations.missingDocumentCount(transactions);
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        final transactions = appState.transactions;
+        final totalIncome = Calculations.totalIncome(transactions);
+        final totalExpense = Calculations.totalExpense(transactions);
+        final profit = Calculations.profit(transactions);
+        final estimatedTax = Calculations.estimatedTax(transactions);
+        final missingDocs = Calculations.missingDocumentCount(transactions);
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _HeaderSection(onPeriodTap: () {}),
-          const SizedBox(height: 16),
-          _KpiRow(
-            totalIncome: formatCurrency(totalIncome),
-            totalExpense: formatCurrency(totalExpense),
-            profit: formatCurrency(profit),
-          ),
-          const SizedBox(height: 16),
-          _KpiRowSecondary(
-            estimatedTax: formatCurrency(estimatedTax),
-            missingDocs: missingDocs,
-          ),
-          const SizedBox(height: 16),
-          _ChartPlaceholder(),
-          const SizedBox(height: 16),
-          Text('Gợi ý AI', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          const _AiSuggestionCard(
-            title: 'Hôm nay chưa ghi sổ',
-            description: 'Có 2 giao dịch từ ngân hàng chưa phân loại.',
-          ),
-          const _AiSuggestionCard(
-            title: 'Có 2 hóa đơn chụp chưa xử lý',
-            description: 'Chạm để xem danh sách OCR đang chờ.',
-          ),
-          const _AiSuggestionCard(
-            title: 'Doanh thu tuần này tăng 12%',
-            description: 'Top hàng hóa: Nước ngọt, bánh mì.',
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.library_books_outlined),
-                label: const Text('Sổ sách S1–S7'),
+              _HeaderSection(onPeriodTap: () {}),
+              const SizedBox(height: 16),
+              _KpiRow(
+                totalIncome: formatCurrency(totalIncome),
+                totalExpense: formatCurrency(totalExpense),
+                profit: formatCurrency(profit),
               ),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.smart_toy_outlined),
-                label: const Text('Trợ lý AI'),
+              const SizedBox(height: 16),
+              _KpiRowSecondary(
+                estimatedTax: formatCurrency(estimatedTax),
+                missingDocs: missingDocs,
+              ),
+              const SizedBox(height: 16),
+              _ChartPlaceholder(),
+              const SizedBox(height: 16),
+              Text('Gợi ý AI', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              const _AiSuggestionCard(
+                title: 'Hôm nay chưa ghi sổ',
+                description: 'Có 2 giao dịch từ ngân hàng chưa phân loại.',
+              ),
+              const _AiSuggestionCard(
+                title: 'Có 2 hóa đơn chụp chưa xử lý',
+                description: 'Chạm để xem danh sách OCR đang chờ.',
+              ),
+              const _AiSuggestionCard(
+                title: 'Doanh thu tuần này tăng 12%',
+                description: 'Top hàng hóa: Nước ngọt, bánh mì.',
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.library_books_outlined),
+                    label: const Text('Sổ sách S1–S7'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.smart_toy_outlined),
+                    label: const Text('Trợ lý AI'),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

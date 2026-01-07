@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
 class NewEntryFab extends StatelessWidget {
-  const NewEntryFab({super.key, required this.onPressed});
+  const NewEntryFab({
+    super.key,
+    required this.onQuickAdd,
+  });
 
-  final VoidCallback onPressed;
+  final VoidCallback onQuickAdd;
 
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: onPressed,
+      onPressed: onQuickAdd,
       child: const Icon(Icons.add),
     );
   }

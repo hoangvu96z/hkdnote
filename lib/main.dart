@@ -5,31 +5,45 @@ import 'screens/ledger_screen.dart';
 import 'screens/inventory_screen.dart';
 import 'screens/payroll_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/sample_data.dart';
+import 'state/app_state.dart';
 import 'widgets/new_entry_fab.dart';
 
 void main() {
-  runApp(const HKDNoteApp());
+  final appState = AppState(
+    initialTransactions: SampleData.transactions(),
+    initialInventory: SampleData.inventoryItems(),
+    initialPayroll: SampleData.payrollRecords(),
+  );
+  runApp(HKDNoteApp(appState: appState));
 }
 
 class HKDNoteApp extends StatelessWidget {
-  const HKDNoteApp({super.key});
+  const HKDNoteApp({super.key, required this.appState});
+
+  final AppState appState;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'HKD Note',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1C6EF2)),
-        useMaterial3: true,
+    return AppStateScope(
+      notifier: appState,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'HKD Note',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1C6EF2)),
+          useMaterial3: true,
+        ),
+        home: HomeShell(appState: appState),
       ),
-      home: const HomeShell(),
     );
   }
 }
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({super.key, required this.appState});
+
+  final AppState appState;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -37,13 +51,14 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
+  final GlobalKey<LedgerScreenState> _ledgerKey = GlobalKey<LedgerScreenState>();
 
-  final List<Widget> _screens = const [
-    OverviewScreen(),
-    LedgerScreen(),
-    InventoryScreen(),
-    PayrollScreen(),
-    SettingsScreen(),
+  late final List<Widget> _screens = [
+    OverviewScreen(appState: widget.appState),
+    LedgerScreen(key: _ledgerKey, appState: widget.appState),
+    InventoryScreen(appState: widget.appState),
+    PayrollScreen(appState: widget.appState),
+    const SettingsScreen(),
   ];
 
   @override
@@ -51,7 +66,7 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       body: _screens[_currentIndex],
       floatingActionButton: NewEntryFab(
-        onPressed: () => _showQuickActionSheet(context),
+        onQuickAdd: () => _showQuickActionSheet(context),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
@@ -116,12 +131,32 @@ class _HomeShellState extends State<HomeShell> {
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
-                children: const [
-                  _QuickActionChip(label: 'Thu tiền', icon: Icons.call_received),
-                  _QuickActionChip(label: 'Chi tiền', icon: Icons.call_made),
-                  _QuickActionChip(label: 'Bán hàng', icon: Icons.point_of_sale),
-                  _QuickActionChip(label: 'OCR hóa đơn', icon: Icons.document_scanner),
-                  _QuickActionChip(label: 'AI note', icon: Icons.smart_toy),
+                children: [
+                  _QuickActionChip(
+                    label: 'Thu tiền',
+                    icon: Icons.call_received,
+                    onPressed: () => _openLedgerTab(0),
+                  ),
+                  _QuickActionChip(
+                    label: 'Chi tiền',
+                    icon: Icons.call_made,
+                    onPressed: () => _openLedgerTab(0),
+                  ),
+                  _QuickActionChip(
+                    label: 'Bán hàng',
+                    icon: Icons.point_of_sale,
+                    onPressed: () => _openLedgerTab(1),
+                  ),
+                  _QuickActionChip(
+                    label: 'OCR hóa đơn',
+                    icon: Icons.document_scanner,
+                    onPressed: () => _openLedgerTab(2),
+                  ),
+                  _QuickActionChip(
+                    label: 'AI note',
+                    icon: Icons.smart_toy,
+                    onPressed: () => _openLedgerTab(0),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -134,6 +169,12 @@ class _HomeShellState extends State<HomeShell> {
         );
       },
     );
+  }
+
+  void _openLedgerTab(int tabIndex) {
+    Navigator.of(context).pop();
+    setState(() => _currentIndex = 1);
+    _ledgerKey.currentState?.switchTab(tabIndex);
   }
 }
 
@@ -175,17 +216,18 @@ class _NavItem extends StatelessWidget {
 }
 
 class _QuickActionChip extends StatelessWidget {
-  const _QuickActionChip({required this.label, required this.icon});
+  const _QuickActionChip({required this.label, required this.icon, required this.onPressed});
 
   final String label;
   final IconData icon;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return ActionChip(
       avatar: Icon(icon, size: 18),
       label: Text(label),
-      onPressed: () {},
+      onPressed: onPressed,
     );
   }
 }

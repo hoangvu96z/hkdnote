@@ -3,56 +3,157 @@ import 'package:flutter/material.dart';
 import '../models/payroll_record.dart';
 import '../services/calculations.dart';
 import '../services/formatters.dart';
-import '../services/sample_data.dart';
+import '../state/app_state.dart';
 
 class PayrollScreen extends StatelessWidget {
-  const PayrollScreen({super.key});
+  const PayrollScreen({super.key, required this.appState});
+
+  final AppState appState;
 
   @override
   Widget build(BuildContext context) {
-    final records = SampleData.payrollRecords();
-    final totalPayroll = Calculations.totalPayroll(records);
-    final unpaidCount = Calculations.unpaidCount(records);
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        final records = appState.payroll;
+        final totalPayroll = Calculations.totalPayroll(records);
+        final unpaidCount = Calculations.unpaidCount(records);
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Row(
+        return SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Text('Lương', style: Theme.of(context).textTheme.titleLarge),
-              const Spacer(),
-              IconButton(
+              Row(
+                children: [
+                  Text('Lương', style: Theme.of(context).textTheme.titleLarge),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.calendar_today_outlined),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _PayrollSummaryCard(
+                totalPayroll: formatCurrency(totalPayroll),
+                unpaidCount: unpaidCount,
+                totalEmployees: records.length,
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () => _openAddDialog(context),
+                icon: const Icon(Icons.calculate_outlined),
+                label: const Text('Tính lương tháng này'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.calendar_today_outlined),
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text('Tạo phiếu chi lương'),
+              ),
+              const SizedBox(height: 16),
+              Text('Danh sách nhân viên', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              ...records.map(
+                (r) => _EmployeeRow.fromRecord(
+                  r,
+                  onTogglePaid: (paid) => appState.markPayrollPaid(r.id, paid),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          _PayrollSummaryCard(
-            totalPayroll: formatCurrency(totalPayroll),
-            unpaidCount: unpaidCount,
-            totalEmployees: records.length,
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.calculate_outlined),
-            label: const Text('Tính lương tháng này'),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.receipt_long_outlined),
-            label: const Text('Tạo phiếu chi lương'),
-          ),
-          const SizedBox(height: 16),
-          Text('Danh sách nhân viên', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...records.map(_EmployeeRow.fromRecord),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Future<void> _openAddDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final baseCtrl = TextEditingController(text: '6000000');
+    final workCtrl = TextEditingController(text: '22');
+    final totalCtrl = TextEditingController(text: '26');
+    final allowanceCtrl = TextEditingController(text: '0');
+    final deductionCtrl = TextEditingController(text: '0');
+    final formKey = GlobalKey<FormState>();
+    final record = await showDialog<PayrollRecord>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Tính lương nhanh'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Nhân viên'),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Nhập tên' : null,
+                  ),
+                  TextFormField(
+                    controller: baseCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Lương cơ bản'),
+                  ),
+                  TextFormField(
+                    controller: workCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Số công'),
+                  ),
+                  TextFormField(
+                    controller: totalCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Công chuẩn'),
+                  ),
+                  TextFormField(
+                    controller: allowanceCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Phụ cấp'),
+                  ),
+                  TextFormField(
+                    controller: deductionCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Khấu trừ'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+            FilledButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.pop(
+                  context,
+                  PayrollRecord(
+                    id: 'pay_${DateTime.now().millisecondsSinceEpoch}',
+                    employeeName: nameCtrl.text,
+                    baseSalary: double.tryParse(baseCtrl.text) ?? 0,
+                    workingDays: int.tryParse(workCtrl.text) ?? 0,
+                    totalWorkingDays: int.tryParse(totalCtrl.text) ?? 0,
+                    allowance: double.tryParse(allowanceCtrl.text) ?? 0,
+                    deduction: double.tryParse(deductionCtrl.text) ?? 0,
+                    isPaid: false,
+                  ),
+                );
+              },
+              child: const Text('Lưu'),
+            ),
+          ],
+        );
+      },
+    );
+    if (record != null) {
+      appState.upsertPayroll(record);
+    }
+    nameCtrl.dispose();
+    baseCtrl.dispose();
+    workCtrl.dispose();
+    totalCtrl.dispose();
+    allowanceCtrl.dispose();
+    deductionCtrl.dispose();
   }
 }
 
@@ -102,6 +203,7 @@ class _EmployeeRow extends StatelessWidget {
     required this.workdays,
     required this.payout,
     required this.isPaid,
+    required this.onTogglePaid,
   });
 
   final String name;
@@ -109,14 +211,16 @@ class _EmployeeRow extends StatelessWidget {
   final String workdays;
   final String payout;
   final bool isPaid;
+  final ValueChanged<bool> onTogglePaid;
 
-  factory _EmployeeRow.fromRecord(PayrollRecord record) {
+  factory _EmployeeRow.fromRecord(PayrollRecord record, {required ValueChanged<bool> onTogglePaid}) {
     return _EmployeeRow(
       name: record.employeeName,
       baseSalary: formatCurrency(record.baseSalary),
       workdays: '${record.workingDays}/${record.totalWorkingDays} công',
       payout: formatCurrency(record.payout),
       isPaid: record.isPaid,
+      onTogglePaid: onTogglePaid,
     );
   }
 
@@ -131,11 +235,10 @@ class _EmployeeRow extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(payout, style: Theme.of(context).textTheme.labelLarge),
-            Text(
-              isPaid ? 'Đã trả' : 'Chưa trả',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isPaid ? Colors.green : Colors.orange,
-                  ),
+            Switch(
+              value: isPaid,
+              onChanged: onTogglePaid,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),

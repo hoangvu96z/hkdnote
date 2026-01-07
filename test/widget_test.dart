@@ -7,24 +7,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:hkdnote/main.dart';
+import 'package:hkdnote/state/app_state.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('FAB mở sheet tạo nhanh', (WidgetTester tester) async {
+    final appState = AppState();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(HKDNoteApp(appState: appState));
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
+    expect(find.text('Tổng quan'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Tạo nhanh giao dịch'), findsOneWidget);
   });
 }
