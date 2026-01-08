@@ -61,7 +61,7 @@ ThemeData _buildDarkTheme() {
     primary: Color(0xFF1E6FFF),
     surface: Color(0xFF0F141E),
     onSurface: Colors.white,
-    surfaceVariant: Color(0xFF1B2130),
+    surfaceContainerHighest: Color(0xFF1B2130),
     outlineVariant: Color(0xFF2B3446),
   );
   return ThemeData(
@@ -70,7 +70,7 @@ ThemeData _buildDarkTheme() {
     scaffoldBackgroundColor: scheme.surface,
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: scheme.surfaceVariant,
+      fillColor: scheme.surfaceContainerHighest,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),

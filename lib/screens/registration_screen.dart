@@ -97,7 +97,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _taxMethod,
+                initialValue: _taxMethod,
                 items: const [
                   DropdownMenuItem(value: 'Phương pháp kê khai', child: Text('Phương pháp kê khai')),
                   DropdownMenuItem(value: 'Phương pháp khoán', child: Text('Phương pháp khoán')),
@@ -229,14 +229,14 @@ class _AccountToggleCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surfaceVariant,
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: scheme.surfaceVariant.withOpacity(0.6),
+            backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.6),
             child: Icon(icon, color: scheme.primary),
           ),
           const SizedBox(width: 12),
